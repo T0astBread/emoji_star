@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CameraDetectorDemo</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="age_under_18">Alter: unter 18</string>
+    <string name="age_18_24">Alter: 18-24</string>
+    <string name="age_25_34">Alter: 25-34</string>
+    <string name="age_35_44">Alter: 35-44</string>
+    <string name="age_45_54">Alter: 45-54</string>
+    <string name="age_55_64">Alter: 55-64</string>
+    <string name="age_over_64">Alter: 65+</string>
+    <string name="ethnicity_caucasian">Kaukasus</string>
+    <string name="ethnicity_black_african">Afrikanisch</string>
+    <string name="ethnicity_east_asian">Ostasien</string>
+    <string name="ethnicity_south_asian">Südasien</string>
+    <string name="ethnicity_hispanic">Südamerika</string>
+</resources>
