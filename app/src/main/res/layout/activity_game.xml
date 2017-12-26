@@ -7,4 +7,55 @@
     android:layout_height="match_parent"
     tools:context="net.eaustria.emotionhero.GameActivity">
 
+    <TextView
+        android:id="@+id/score"
+        style="@style/AppTheme.TextAppearance.Score"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/score_display_background"
+        android:drawableLeft="@drawable/mood_good"
+        android:drawablePadding="6dp"
+        android:drawableStart="@drawable/mood_good"
+        android:padding="2dp"
+        android:paddingEnd="16dp"
+        android:paddingStart="8dp"
+        android:text="9"
+        app:layout_constraintBottom_toTopOf="@+id/cameraViewHolder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <FrameLayout
+        android:id="@+id/cameraViewHolder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/camera_view_holder_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias=".5">
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="00:15"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cameraViewHolder"/>
+
 </android.support.constraint.ConstraintLayout>
