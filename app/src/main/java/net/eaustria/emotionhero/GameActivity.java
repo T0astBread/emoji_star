@@ -94,7 +94,7 @@ public class GameActivity extends AppCompatActivity
                 }
                 else
                 {
-                    float viewAspectRatio = (float) measureWidth / measureHeight; //1
+                    float viewAspectRatio = 1; //The preview SurfaceView is always a square
                     float cameraPreviewAspectRatio = (float) cameraPreviewWidth / cameraPreviewHeight;
 
                     if (cameraPreviewAspectRatio > viewAspectRatio)
@@ -108,7 +108,7 @@ public class GameActivity extends AppCompatActivity
                         height = (int) (measureWidth / cameraPreviewAspectRatio);
                     }
                 }
-                setMeasuredDimension(width,height);
+                setMeasuredDimension(width, height);
             }
         };
         FrameLayout.LayoutParams cameraViewLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
