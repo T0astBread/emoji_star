@@ -2,7 +2,6 @@ package net.eaustria.emotionhero;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -19,7 +18,6 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.affectiva.android.affdex.sdk.Frame;
@@ -30,10 +28,10 @@ import com.affectiva.android.affdex.sdk.detector.Face;
 import java.util.List;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-public class MainActivity extends AppCompatActivity implements Detector.ImageListener, CameraDetector.CameraEventListener {
+public class AffectivaDemoActivity extends AppCompatActivity implements Detector.ImageListener, CameraDetector.CameraEventListener {
 
     private static final int MY_PERMISSIONS_REQUESTS = 1;
-    final String LOG_TAG = MainActivity.class.getSimpleName();
+    final String LOG_TAG = AffectivaDemoActivity.class.getSimpleName();
     Button mStartSDKButton;
     Button surfaceViewVisibilityButton;
     TextView smileTextView;
@@ -56,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements Detector.ImageLis
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_affectiva_demo);
 
         smileTextView = findViewById(R.id.smile_textview);
         ageTextView = findViewById(R.id.age_textview);
