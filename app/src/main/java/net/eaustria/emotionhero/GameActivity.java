@@ -3,8 +3,10 @@ package net.eaustria.emotionhero;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
+import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 
 import com.affectiva.android.affdex.sdk.Frame;
@@ -92,24 +94,25 @@ public class GameActivity extends AppCompatActivity
                 }
                 else
                 {
-                    float viewAspectRatio = (float) measureWidth/measureHeight;
+                    float viewAspectRatio = (float) measureWidth / measureHeight; //1
                     float cameraPreviewAspectRatio = (float) cameraPreviewWidth / cameraPreviewHeight;
 
                     if (cameraPreviewAspectRatio > viewAspectRatio)
                     {
-                        width = measureWidth;
-                        height =(int) (measureWidth / cameraPreviewAspectRatio);
+                        width = (int) (measureHeight * cameraPreviewAspectRatio);
+                        height = measureHeight;
                     }
                     else
                     {
-                        width = (int) (measureHeight * cameraPreviewAspectRatio);
-                        height = measureHeight;
+                        width = measureWidth;
+                        height = (int) (measureWidth / cameraPreviewAspectRatio);
                     }
                 }
                 setMeasuredDimension(width,height);
             }
         };
-        this.cameraViewHolder.addView(this.cameraView);
+        FrameLayout.LayoutParams cameraViewLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
+        this.cameraViewHolder.addView(this.cameraView, cameraViewLayoutParams);
     }
 
     private void attachBehaviour()
