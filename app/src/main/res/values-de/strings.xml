@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CameraDetectorDemo</string>
     <string name="action_settings">Einstellungen</string>
     <string name="age_under_18">Alter: unter 18</string>
     <string name="age_18_24">Alter: 18-24</string>
