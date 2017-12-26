@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">CameraDetectorDemo</string>
+    <string name="app_name" translatable="false">Emotion Hero</string>
     <string name="action_settings">Settings</string>
     <string name="age_under_18">age: under 18</string>
     <string name="age_18_24">age: 18–24</string>
