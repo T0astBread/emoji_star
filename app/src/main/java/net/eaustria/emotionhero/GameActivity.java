@@ -7,6 +7,7 @@ import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewParent;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import com.affectiva.android.affdex.sdk.Frame;
@@ -35,6 +36,7 @@ public class GameActivity extends AppCompatActivity
         initVariables();
         initViews();
         initPostVariables();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     // region Variables
