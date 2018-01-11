@@ -13,4 +13,7 @@
     <string name="ethnicity_east_asian">East Asian</string>
     <string name="ethnicity_south_asian">South Asian</string>
     <string name="ethnicity_hispanic">Hispanic</string>
+    <string name="loading_camera">Preparing facial detection…</string>
+    <string name="paused">The game is paused</string>
+    <string name="paused_sub">Tap to resume</string>
 </resources>

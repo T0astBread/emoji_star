@@ -6,9 +6,10 @@ import android.support.v7.app.AppCompatDelegate;
 import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewParent;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 
 import com.affectiva.android.affdex.sdk.Frame;
 import com.affectiva.android.affdex.sdk.detector.CameraDetector;
@@ -17,9 +18,12 @@ public class GameActivity extends AppCompatActivity
 {
     private SurfaceView cameraView;
     private FrameLayout cameraViewHolder;
+    private ViewGroup cameraLoadingLayout, pauseLayout;
+    private ProgressBar cameraLoadingSpinner;
 
     private CameraDetector detector;
     private int cameraPreviewWidth, cameraPreviewHeight;
+    private boolean paused;
 
 
     @Override
@@ -115,10 +119,16 @@ public class GameActivity extends AppCompatActivity
         };
         FrameLayout.LayoutParams cameraViewLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
         this.cameraViewHolder.addView(this.cameraView, cameraViewLayoutParams);
+        this.cameraLoadingLayout = (ViewGroup) findViewById(R.id.cameraLoadingLayout);
+        this.cameraLoadingSpinner = (ProgressBar) findViewById(R.id.cameraLoadingSpinner);
+        this.pauseLayout = (ViewGroup) findViewById(R.id.pausedLayout);
     }
 
     private void attachBehaviour()
     {
+        this.cameraView.setOnClickListener(v -> pauseGame());
+        this.pauseLayout.setOnClickListener(v -> resumeGame());
+        this.cameraLoadingSpinner.setIndeterminate(true);
     }
     // endregion
     // endregion
@@ -128,15 +138,47 @@ public class GameActivity extends AppCompatActivity
     protected void onResume()
     {
         super.onResume();
-        this.detector.start();
-        this.cameraView.setVisibility(View.VISIBLE);
+        resumeCameraDetector();
     }
 
     @Override
     protected void onPause()
     {
         super.onPause();
+        pauseCameraDetector();
+    }
+
+    private void pauseGame()
+    {
+        this.pauseLayout.setVisibility(View.VISIBLE);
+        pauseCameraDetector();
+    }
+
+    private void pauseCameraDetector()
+    {
+        if(!this.detector.isRunning()) return;
         this.detector.stop();
         this.cameraView.setVisibility(View.INVISIBLE);
+    }
+
+    private void resumeGame()
+    {
+        this.pauseLayout.setVisibility(View.INVISIBLE);
+        resumeCameraDetector();
+    }
+
+    private void resumeCameraDetector()
+    {
+        if(this.detector.isRunning()) return;
+        this.cameraLoadingLayout.setVisibility(View.VISIBLE);
+        this.detector.start();
+        this.cameraView.setVisibility(View.VISIBLE);
+        this.cameraLoadingLayout.setVisibility(View.INVISIBLE);
+    }
+
+    private void toggleGamePause()
+    {
+        if(this.paused) resumeGame();
+        else pauseGame();
     }
 }
