@@ -1,5 +1,6 @@
 package net.eaustria.emotionhero;
 
+import android.Manifest;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
@@ -10,9 +11,11 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.affectiva.android.affdex.sdk.Frame;
 import com.affectiva.android.affdex.sdk.detector.CameraDetector;
+import com.t0ast.androidcommons.permissions.PermissionUtils;
 
 public class GameActivity extends AppCompatActivity
 {
@@ -154,6 +157,7 @@ public class GameActivity extends AppCompatActivity
         pauseCameraDetector();
     }
 
+    // region Pausing
     private void pauseCameraDetector()
     {
         if(!this.detector.isRunning()) return;
@@ -170,6 +174,11 @@ public class GameActivity extends AppCompatActivity
     private void resumeCameraDetector()
     {
         if(this.detector.isRunning()) return;
+        if(!PermissionUtils.ensurePermissionIsGranted(this, Manifest.permission.CAMERA))
+        {
+            Toast.makeText(this, R.string.camera_permission_required, Toast.LENGTH_SHORT).show();
+            return;
+        }
         this.cameraLoadingLayout.setVisibility(View.VISIBLE);
         this.detector.start();
         this.cameraView.setVisibility(View.VISIBLE);
@@ -181,4 +190,5 @@ public class GameActivity extends AppCompatActivity
         if(this.paused) resumeGame();
         else pauseGame();
     }
+    // endregion
 }
