@@ -2,5 +2,5 @@ include ':app'
 
 // Clone or download from: https://github.com/T0astBread/AppCommons
 include ':genericcommons', ':androidcommons'
-project(':genericcommons').projectDir = new File('../AppCommons/genericcommons')
-project(':androidcommons').projectDir = new File('../AppCommons/androidcommons')
+project(':genericcommons').projectDir = new File('../../AppCommons/genericcommons')
+project(':androidcommons').projectDir = new File('../../AppCommons/androidcommons')
