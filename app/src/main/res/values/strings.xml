@@ -13,6 +13,8 @@
     <string name="ethnicity_east_asian">East Asian</string>
     <string name="ethnicity_south_asian">South Asian</string>
     <string name="ethnicity_hispanic">Hispanic</string>
+    <string name="detected_emoji_view_placeholder">Detected emoji will appear here</string>
+    <string name="time" formatted="false">%d:%02d</string>
     <string name="loading_camera">Preparing facial detection…</string>
     <string name="paused">The game is paused</string>
     <string name="paused_sub">Tap to resume</string>

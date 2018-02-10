@@ -13,19 +13,27 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         android:background="@drawable/score_display_background"
         android:drawableLeft="@drawable/mood_good"
         android:drawablePadding="6dp"
-        android:drawableStart="@drawable/mood_good"
         android:padding="2dp"
         android:paddingEnd="16dp"
         android:paddingStart="8dp"
         android:text="9"
         app:layout_constraintBottom_toTopOf="@+id/cameraViewHolder"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/emoji"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="Emoji"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        app:layout_constraintBottom_toTopOf="@+id/cameraViewHolder"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <FrameLayout
         android:id="@+id/cameraViewHolder"
@@ -42,6 +50,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias=".5">
+
+        <TextView
+            android:id="@+id/detectedEmoji"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="32dp"
+            android:text="@string/detected_emoji_view_placeholder"
+            android:visibility="invisible"/>
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/pausedLayout"
@@ -130,10 +147,11 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="00:15"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cameraViewHolder"/>
+        app:layout_constraintTop_toBottomOf="@+id/cameraViewHolder"
+        tools:text="0:15"/>
 
 </android.support.constraint.ConstraintLayout>

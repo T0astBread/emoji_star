@@ -1,9 +1,11 @@
 package net.eaustria.emotionhero;
 
 import android.Manifest;
-import android.support.v7.app.AppCompatActivity;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.View;
@@ -11,14 +13,31 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.affectiva.android.affdex.sdk.Frame;
 import com.affectiva.android.affdex.sdk.detector.CameraDetector;
-import com.t0ast.androidcommons.permissions.PermissionUtils;
+import com.affectiva.android.affdex.sdk.detector.Detector;
+import com.affectiva.android.affdex.sdk.detector.Face;
+import com.annimon.stream.Stream;
 
-public class GameActivity extends AppCompatActivity
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import cc.t0ast.androidcommons.permissions.PermissionUtils;
+
+public class GameActivity extends AppCompatActivity implements Detector.ImageListener
 {
+    public static final String TAG = GameActivity.class.getSimpleName();
+    private static final Set<Face.EMOJI> EXCLUDED_EMOJI;
+
+    private TextView scoreView, emojiView, detectedEmojiView, timerView;
     private SurfaceView cameraView;
     private FrameLayout cameraViewHolder;
     private ViewGroup cameraLoadingLayout, pauseLayout;
@@ -26,8 +45,22 @@ public class GameActivity extends AppCompatActivity
 
     private CameraDetector detector;
     private int cameraPreviewWidth, cameraPreviewHeight;
-    private boolean paused;
+    private int score, remainingTime;
+    private Face.EMOJI currentEmoji;
+    private Method currentEmojiValueMethod;
+    private long correctFaceStartTimestamp; // Timestamp when the correct face was first detected
+    private int consecutiveIncorrectFaces;
+    private GameBackgroundTask backgroundTask;
 
+    static
+    {
+        EXCLUDED_EMOJI = new HashSet<>();
+        EXCLUDED_EMOJI.add(Face.EMOJI.FLUSHED);
+        EXCLUDED_EMOJI.add(Face.EMOJI.RAGE);
+//        EXCLUDED_EMOJI.add(Face.EMOJI.STUCK_OUT_TONGUE_WINKING_EYE);
+        EXCLUDED_EMOJI.add(Face.EMOJI.LAUGHING);
+        EXCLUDED_EMOJI.add(Face.EMOJI.UNKNOWN);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -35,6 +68,7 @@ public class GameActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
         initActivity();
+        newEmoji();
     }
 
     // region Initialization
@@ -49,6 +83,7 @@ public class GameActivity extends AppCompatActivity
     // region Variables
     private void initVariables()
     {
+        this.remainingTime = 60;
     }
 
     private void initPostVariables()
@@ -72,6 +107,8 @@ public class GameActivity extends AppCompatActivity
                 cameraView.requestLayout();
             }
         });
+        this.detector.setDetectAllEmojis(true);
+        this.detector.setMaxProcessRate(60);
     }
     // endregion
 
@@ -79,13 +116,18 @@ public class GameActivity extends AppCompatActivity
     private void initViews()
     {
         loadViews();
-        attachBehaviour();
+        prepareViews();
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES); //Just because it looks nice (not final)
     }
 
     private void loadViews()
     {
+        this.scoreView = findViewById(R.id.score);
+        this.emojiView = findViewById(R.id.emoji);
+        this.detectedEmojiView = findViewById(R.id.detectedEmoji);
+        this.timerView = findViewById(R.id.timer);
+
         this.cameraViewHolder = (FrameLayout) findViewById(R.id.cameraViewHolder);
         this.cameraView = new SurfaceView(this)
         {
@@ -121,14 +163,16 @@ public class GameActivity extends AppCompatActivity
             }
         };
         FrameLayout.LayoutParams cameraViewLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
-        this.cameraViewHolder.addView(this.cameraView, cameraViewLayoutParams);
+        this.cameraViewHolder.addView(this.cameraView, 0, cameraViewLayoutParams);
         this.cameraLoadingLayout = (ViewGroup) findViewById(R.id.cameraLoadingLayout);
         this.cameraLoadingSpinner = (ProgressBar) findViewById(R.id.cameraLoadingSpinner);
         this.pauseLayout = (ViewGroup) findViewById(R.id.pausedLayout);
     }
 
-    private void attachBehaviour()
+    private void prepareViews()
     {
+        updateScoreView();
+
         this.cameraView.setOnClickListener(v -> pauseGame());
         this.pauseLayout.setOnClickListener(v -> resumeGame());
         this.cameraLoadingSpinner.setIndeterminate(true);
@@ -136,28 +180,34 @@ public class GameActivity extends AppCompatActivity
     // endregion
     // endregion
 
-
     @Override
     protected void onResume()
     {
         super.onResume();
-        resumeCameraDetector();
+        resumeGame();
     }
 
     @Override
     protected void onPause()
     {
         super.onPause();
-        pauseCameraDetector();
-    }
-
-    private void pauseGame()
-    {
-        this.pauseLayout.setVisibility(View.VISIBLE);
-        pauseCameraDetector();
+        pauseGame();
     }
 
     // region Pausing
+    private void pauseGame()
+    {
+        this.pauseLayout.setVisibility(View.VISIBLE);
+        pauseBackgroundTask();
+        pauseCameraDetector();
+    }
+
+    private void pauseBackgroundTask()
+    {
+        if(this.backgroundTask != null) this.backgroundTask.cancel(true);
+        this.backgroundTask = null;
+    }
+
     private void pauseCameraDetector()
     {
         if(!this.detector.isRunning()) return;
@@ -167,8 +217,16 @@ public class GameActivity extends AppCompatActivity
 
     private void resumeGame()
     {
-        this.pauseLayout.setVisibility(View.INVISIBLE);
         resumeCameraDetector();
+        this.pauseLayout.setVisibility(View.INVISIBLE);
+        resumeBackgroundTask();
+    }
+
+    private void resumeBackgroundTask()
+    {
+        pauseBackgroundTask();
+        this.backgroundTask = new GameBackgroundTask();
+        this.backgroundTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void resumeCameraDetector()
@@ -181,14 +239,153 @@ public class GameActivity extends AppCompatActivity
         }
         this.cameraLoadingLayout.setVisibility(View.VISIBLE);
         this.detector.start();
+        this.detector.setImageListener(this);
         this.cameraView.setVisibility(View.VISIBLE);
         this.cameraLoadingLayout.setVisibility(View.INVISIBLE);
     }
-
-    private void toggleGamePause()
-    {
-        if(this.paused) resumeGame();
-        else pauseGame();
-    }
     // endregion
+
+    @Override
+    public void onImageResults(List<Face> list, Frame frame, float v)
+    {
+        if(list.size() < 1) return;
+//        Log.d(TAG, "onImageResults: Faces: " + list.size());
+        Face face = list.get(0);
+
+//        Face.EMOJI domEm = face.emojis.getDominantEmoji();
+//        Log.d(TAG, "onImageResults: Dominant face is: " + domEm);
+////        Log.d(TAG, "onImageResults: Wink: " + face.emojis.getWink());
+//        this.detectedEmojiView.setText(domEm.getUnicode());
+//        boolean isMakingCorrectFace = domEm == this.currentEmoji;
+
+        float emojiValue = 0;
+        try
+        {
+            emojiValue = (float) this.currentEmojiValueMethod.invoke(face.emojis) * getEmojiValueMultiplier(this.currentEmoji);
+        }
+        catch(Exception e)
+        {
+            Log.e(TAG, "onImageResults: Reflection error calling emoji value mathod", e);
+        }
+        Log.i(TAG, "onImageResults: Emoji value: " + emojiValue);
+        boolean isMakingCorrectFace = emojiValue > .5f;
+
+        if(isMakingCorrectFace)
+        {
+            Log.i(TAG, "onImageResults: Correct face");
+            this.consecutiveIncorrectFaces = 0;
+            if(this.correctFaceStartTimestamp == -1) this.correctFaceStartTimestamp = System.currentTimeMillis();
+            else if(Math.abs(System.currentTimeMillis() - this.correctFaceStartTimestamp) >= 100)
+            {
+                Log.d(TAG, "onImageResults: Score up");
+                raiseScore();
+                newEmoji();
+            }
+        }
+        else
+        {
+            if(++this.consecutiveIncorrectFaces > 5) this.correctFaceStartTimestamp = -1;
+        }
+    }
+
+    private void newEmoji()
+    {
+        Face.EMOJI[] emojis = Face.EMOJI.values();
+        do
+        {
+            this.currentEmoji = emojis[(int) (Math.random() * emojis.length)];
+        }
+        while(EXCLUDED_EMOJI.contains(this.currentEmoji));
+        Log.i(TAG, "newEmoji: New emoji is: " + this.currentEmoji.getShortcode());
+        this.currentEmojiValueMethod = getCurrentEmojiValueMethod();
+        this.consecutiveIncorrectFaces = 0;
+        this.correctFaceStartTimestamp = -1;
+        this.emojiView.setText(this.currentEmoji.getUnicode());
+    }
+
+    private Method getCurrentEmojiValueMethod()
+    {
+        String emojiName = this.currentEmoji.getShortcode();
+        emojiName = emojiName.substring(1, emojiName.length() - 1);
+        while(emojiName.contains("_"))
+        {
+            int underscoreIndex = emojiName.indexOf("_");
+            emojiName = emojiName.replaceFirst("_\\w", Character.toString(Character.toUpperCase(emojiName.charAt(underscoreIndex + 1))));
+        }
+        emojiName = emojiName.substring(0, 1).toUpperCase().concat(emojiName.substring(1));
+        try
+        {
+            return Face.Emojis.class.getDeclaredMethod("get" + emojiName);
+        }
+        catch(NoSuchMethodException e)
+        {
+            Log.e(TAG, "getScoreForCurrentEmoji: Invalid emoji: " + this.currentEmoji.getShortcode(), e);
+            return null;
+        }
+    }
+
+    private float getEmojiValueMultiplier(Face.EMOJI emoji)
+    {
+        switch(emoji)
+        {
+            case LAUGHING:
+                return 10;
+            case WINK:
+                return 2;
+            case STUCK_OUT_TONGUE:
+                return 4;
+            case STUCK_OUT_TONGUE_WINKING_EYE:
+                return 10;
+            case SMILEY:
+                return 2;
+            case SMIRK:
+                return 1.5f;
+            default:
+                return 1;
+        }
+    }
+
+    private void raiseScore()
+    {
+        this.score++;
+        updateScoreView();
+    }
+
+    private void updateScoreView()
+    {
+        this.scoreView.setText(Integer.toString(this.score));
+    }
+
+    private class GameBackgroundTask extends AsyncTask<Void, Boolean, Void>
+    {
+        private static final int CYCLE_TIME = 1000;
+
+        @Override
+        protected Void doInBackground(Void... voids)
+        {
+            for(int cycles = 0; !isCancelled(); cycles++)
+            {
+                publishProgress(remainingTime <= 0);
+                try
+                {
+                    Thread.sleep(CYCLE_TIME);
+                }
+                catch(InterruptedException e)
+                {
+                    Log.e(TAG, "doInBackground: Interrupted", e);
+                    cancel(false);
+                }
+                if(--remainingTime < 0) remainingTime = 0;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Boolean... booleans)
+        {
+            boolean finished = booleans[0];
+            if(finished) pauseGame();
+            timerView.setText(getString(R.string.time, remainingTime/60, remainingTime%60));
+        }
+    }
 }
