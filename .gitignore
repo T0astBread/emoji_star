@@ -10,3 +10,6 @@
 
 /.idea/modules.xml
 /.idea/misc.xml
+
+\.idea/gradle\.xml
+settings\.gradle
