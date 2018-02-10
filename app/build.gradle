@@ -31,8 +31,9 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile 'com.affectiva.android:affdexsdk:3.+'
     compile 'com.annimon:stream:1.1.9'
+    compile 'com.android.support:support-emoji:26.+'
     compile project(':androidcommons')
-    compile project(':genericcommons')
+//    compile project(':genericcommons')
 }
 
 
