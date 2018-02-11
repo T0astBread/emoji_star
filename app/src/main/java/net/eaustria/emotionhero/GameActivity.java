@@ -1,6 +1,7 @@
 package net.eaustria.emotionhero;
 
 import android.Manifest;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -20,15 +21,11 @@ import com.affectiva.android.affdex.sdk.Frame;
 import com.affectiva.android.affdex.sdk.detector.CameraDetector;
 import com.affectiva.android.affdex.sdk.detector.Detector;
 import com.affectiva.android.affdex.sdk.detector.Face;
-import com.annimon.stream.Stream;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cc.t0ast.androidcommons.permissions.PermissionUtils;
 
@@ -36,6 +33,8 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
 {
     public static final String TAG = GameActivity.class.getSimpleName();
     private static final Set<Face.EMOJI> EXCLUDED_EMOJI;
+    private static final int TIME_PER_ROUND = 10;
+    private static final int GAME_OVER_REQUEST_CODE = 0;
 
     private TextView scoreView, emojiView, detectedEmojiView, timerView;
     private SurfaceView cameraView;
@@ -83,7 +82,7 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
     // region Variables
     private void initVariables()
     {
-        this.remainingTime = 60;
+        this.remainingTime = TIME_PER_ROUND;
     }
 
     private void initPostVariables()
@@ -197,6 +196,7 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
     // region Pausing
     private void pauseGame()
     {
+        Log.i(TAG, "pauseGame: Pausing");
         this.pauseLayout.setVisibility(View.VISIBLE);
         pauseBackgroundTask();
         pauseCameraDetector();
@@ -244,6 +244,16 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
         this.cameraLoadingLayout.setVisibility(View.INVISIBLE);
     }
     // endregion
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode != GAME_OVER_REQUEST_CODE) return;
+        Log.i(TAG, "onActivityResult: Returned from GameOverActivity");
+        finish();
+    }
 
     @Override
     public void onImageResults(List<Face> list, Frame frame, float v)
@@ -356,6 +366,14 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
         this.scoreView.setText(Integer.toString(this.score));
     }
 
+    private void endGame()
+    {
+        pauseGame();
+        Intent gameOverActivityIntent = new Intent(this, GameOverActivity.class);
+        gameOverActivityIntent.putExtra(GameOverActivity.EXTRA_SCORE, this.score);
+        startActivityForResult(gameOverActivityIntent, GAME_OVER_REQUEST_CODE);
+    }
+
     private class GameBackgroundTask extends AsyncTask<Void, Boolean, Void>
     {
         private static final int CYCLE_TIME = 1000;
@@ -384,7 +402,7 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
         protected void onProgressUpdate(Boolean... booleans)
         {
             boolean finished = booleans[0];
-            if(finished) pauseGame();
+            if(finished) endGame();
             timerView.setText(getString(R.string.time, remainingTime/60, remainingTime%60));
         }
     }
