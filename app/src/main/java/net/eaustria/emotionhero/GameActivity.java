@@ -33,7 +33,7 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
 {
     public static final String TAG = GameActivity.class.getSimpleName();
     private static final Set<Face.EMOJI> EXCLUDED_EMOJI;
-    private static final int TIME_PER_ROUND = 10;
+    private static final int TIME_PER_ROUND = 60;
     private static final int GAME_OVER_REQUEST_CODE = 0;
 
     private TextView scoreView, emojiView, detectedEmojiView, timerView;
