@@ -45,6 +45,7 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
     private CameraDetector detector;
     private int cameraPreviewWidth, cameraPreviewHeight;
     private int score, remainingTime;
+    private boolean paused;
     private Face.EMOJI currentEmoji;
     private Method currentEmojiValueMethod;
     private long correctFaceStartTimestamp; // Timestamp when the correct face was first detected
@@ -67,7 +68,7 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
         initActivity();
-        newEmoji();
+        startGame();
     }
 
     // region Initialization
@@ -82,7 +83,7 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
     // region Variables
     private void initVariables()
     {
-        this.remainingTime = TIME_PER_ROUND;
+        this.paused = true;
     }
 
     private void initPostVariables()
@@ -170,14 +171,21 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
 
     private void prepareViews()
     {
-        updateScoreView();
-
         this.cameraView.setOnClickListener(v -> pauseGame());
         this.pauseLayout.setOnClickListener(v -> resumeGame());
         this.cameraLoadingSpinner.setIndeterminate(true);
     }
     // endregion
     // endregion
+
+    private void startGame()
+    {
+        this.remainingTime = TIME_PER_ROUND;
+        this.score = 0;
+        updateScoreView();
+        newEmoji();
+        resumeGame();
+    }
 
     @Override
     protected void onResume()
@@ -196,6 +204,8 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
     // region Pausing
     private void pauseGame()
     {
+        if(this.paused) return;
+        this.paused = true;
         Log.i(TAG, "pauseGame: Pausing");
         this.pauseLayout.setVisibility(View.VISIBLE);
         pauseBackgroundTask();
@@ -217,6 +227,8 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
 
     private void resumeGame()
     {
+        if(!this.paused) return;
+        this.paused = false;
         resumeCameraDetector();
         this.pauseLayout.setVisibility(View.INVISIBLE);
         resumeBackgroundTask();
@@ -250,9 +262,12 @@ public class GameActivity extends AppCompatActivity implements Detector.ImageLis
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode != GAME_OVER_REQUEST_CODE) return;
-        Log.i(TAG, "onActivityResult: Returned from GameOverActivity");
-        finish();
+        if(requestCode == GAME_OVER_REQUEST_CODE)
+        {
+            Log.i(TAG, "onActivityResult: Returned from GameOverActivity");
+            if(resultCode == GameOverActivity.RESULT_NEW_GAME) startGame();
+            else finish();
+        }
     }
 
     @Override

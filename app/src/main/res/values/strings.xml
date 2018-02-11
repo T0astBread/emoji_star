@@ -19,6 +19,7 @@
     <string name="paused">The game is paused</string>
     <string name="paused_sub">Tap to resume</string>
     <string name="camera_permission_required">The camera permission is required to use this app</string>
-    <string name="game_over">It\'s Game Over!</string>
+    <string name="game_over">It\'s game over!</string>
     <string name="your_score">Your Score</string>
+    <string name="new_game">New game</string>
 </resources>
